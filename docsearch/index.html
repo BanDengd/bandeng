@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocSearch - 企业文档搜索与管理平台</title>
+    <!-- 腾讯云开发 CloudBase Web SDK（全量版） -->
+    <script src="https://static.cloudbase.net/cloudbase-js-sdk/3.0.1/cloudbase.full.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js">
+    </script>
+    <style>
+        :root {
+            --bg: #f5f6fa;
+            --card-bg: #ffffff;
+            --text: #2d3436;
+            --text-secondary: #636e72;
+            --border: #e0e4e8;
+            --accent: #4a6cf7;
+            --accent-hover: #3651d5;
+            --accent-light: #eef1ff;
+            --accent-glow: rgba(74, 108, 247, 0.2);
+            --danger: #e74c3c;
+            --danger-hover: #c0392b;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+            --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12);
+            --radius-sm: 8px;
+            --radius: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --font-mono: 'SF Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+        }
+
+        body.dev-mode {
+            --bg: #1a1d28;
+            --card-bg: #21242f;
+            --text: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border: #2d3143;
+            --accent: #6d8df7;
+            --accent-hover: #8aa5ff;
+            --accent-light: #1e2440;
+            --accent-glow: rgba(109, 141, 247, 0.25);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            transition: all var(--transition);
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.6;
+        }
+
+        /* ========== 顶部导航 ========== */
+        .navbar {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition);
+            gap: 12px;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--accent);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+        .navbar-brand .icon {
+            font-size: 1.5rem;
+        }
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+        .badge-user {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        .badge-admin {
+            background: #fff3e0;
+            color: #e65100;
+            border: 1px solid #ffe0b2;
+            animation: pulseBadge 2s ease-in-out infinite;
+        }
+        body.dev-mode .badge-user {
+            background: #1b3a1b;
+            color: #81c784;
+            border-color: #2d5a2d;
+        }
+        body.dev-mode .badge-admin {
+            background: #3d2000;
+            color: #ffb74d;
+            border-color: #5a3500;
+        }
+        @keyframes pulseBadge {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(243, 156, 18, 0);
+            }
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: var(--card-bg);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all var(--transition);
+            color: var(--text);
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+        .btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-1px);
+        }
+        .btn:active {
+            transform: scale(0.96);
+            transition: all 0.1s ease;
+        }
+        .btn-accent {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+            font-weight: 600;
+        }
+        .btn-accent:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            color: #fff;
+            box-shadow: 0 4px 18px var(--accent-glow);
+        }
+        .btn-danger {
+            border-color: #fecaca;
+            color: var(--danger);
+        }
+        .btn-danger:hover {
+            background: #fef2f2;
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        .btn-sm {
+            padding: 5px 11px;
+            font-size: 0.75rem;
+            border-radius: 16px;
+        }
+        .btn-xs {
+            padding: 3px 9px;
+            font-size: 0.7rem;
+            border-radius: 12px;
+        }
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* QR按钮特殊样式 */
+        .btn-qr {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+            font-weight: 600;
+            animation: qrPulse 3s ease-in-out infinite;
+            position: relative;
+        }
+        .btn-qr:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            animation: none;
+            box-shadow: 0 6px 24px var(--accent-glow);
+        }
+        @keyframes qrPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(74, 108, 247, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 0 14px rgba(74, 108, 247, 0);
+            }
+        }
+
+        /* ========== 主布局 ========== */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 20px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* ========== 搜索区域 ========== */
+        .search-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .search-box-wrapper {
+            position: relative;
+            background: var(--card-bg);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow);
+            border: 2px solid transparent;
+            transition: all var(--transition);
+        }
+        .search-box-wrapper:focus-within {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-lg), 0 0 0 8px var(--accent-glow);
+            transform: translateY(-2px);
+        }
+        .search-box-inner {
+            display: flex;
+            align-items: center;
+            padding: 6px 6px 6px 20px;
+            gap: 10px;
+        }
+        .search-icon-large {
+            font-size: 1.4rem;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            transition: color var(--transition);
+        }
+        .search-box-wrapper:focus-within .search-icon-large {
+            color: var(--accent);
+        }
+        .search-input-main {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 1.08rem;
+            padding: 12px 0;
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            min-width: 0;
+        }
+        .search-input-main::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+        .search-submit-btn {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+            box-shadow: 0 4px 14px var(--accent-glow);
+        }
+        .search-submit-btn:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 6px 22px var(--accent-glow);
+            transform: scale(1.05);
+        }
+        .search-submit-btn:active {
+            transform: scale(0.92);
+            transition: all 0.1s ease;
+        }
+
+        /* 分类标签 */
+        .category-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .category-chip {
+            padding: 7px 16px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: var(--card-bg);
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 500;
+            transition: all var(--transition);
+            color: var(--text-secondary);
+            white-space: nowrap;
+            user-select: none;
+        }
+        .category-chip:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+        .category-chip.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+            font-weight: 600;
+            box-shadow: 0 2px 10px var(--accent-glow);
+        }
+        .category-chip .count {
+            font-size: 0.7rem;
+            opacity: 0.8;
+            margin-left: 4px;
+        }
+
+        /* ========== 结果区域 ========== */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .results-count {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .results-count strong {
+            color: var(--accent);
+        }
+        .sort-select {
+            padding: 7px 14px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: var(--card-bg);
+            font-size: 0.82rem;
+            color: var(--text);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all var(--transition);
+            outline: none;
+        }
+        .sort-select:focus {
+            border-color: var(--accent);
+        }
+
+        .doc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 16px;
+        }
+        .doc-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 20px 22px;
+            border: 1.5px solid var(--border);
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        .doc-card:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-3px);
+        }
+        .doc-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity var(--transition);
+            border-radius: 0 2px 2px 0;
+        }
+        .doc-card:hover::before {
+            opacity: 1;
+        }
+        .doc-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .doc-card-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text);
+            line-height: 1.3;
+            flex: 1;
+        }
+        .doc-card-category {
+            flex-shrink: 0;
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 12px;
+            background: var(--accent-light);
+            color: var(--accent);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .doc-card-excerpt {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.5;
+        }
+        .doc-card-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 0.73rem;
+            color: var(--text-secondary);
+            flex-wrap: wrap;
+        }
+        .doc-card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .doc-tag {
+            font-size: 0.7rem;
+            padding: 2px 9px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            color: #64748b;
+            white-space: nowrap;
+        }
+        body.dev-mode .doc-tag {
+            background: #2d3143;
+            color: #94a3b8;
+        }
+        .doc-card-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: auto;
+            padding-top: 4px;
+        }
+        .highlight {
+            background: #fef08a;
+            padding: 1px 3px;
+            border-radius: 3px;
+        }
+        body.dev-mode .highlight {
+            background: #5a4a00;
+            color: #fef08a;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-state .icon {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 12px;
+        }
+        .empty-state h3 {
+            font-size: 1.2rem;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        /* ========== 模态框 ========== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.25s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        .modal {
+            background: var(--card-bg);
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease;
+            border: 1px solid var(--border);
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .modal-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--card-bg);
+            z-index: 10;
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        }
+        .modal-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .modal-close {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1.5px solid var(--border);
+            background: var(--card-bg);
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+            color: var(--text-secondary);
+        }
+        .modal-close:hover {
+            background: #fef2f2;
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+        .modal-body {
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .modal-body label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text);
+            display: block;
+            margin-bottom: 2px;
+        }
+        .modal-body input,
+        .modal-body textarea,
+        .modal-body select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border);
+            font-size: 0.9rem;
+            font-family: inherit;
+            background: var(--bg);
+            color: var(--text);
+            transition: all var(--transition);
+            outline: none;
+            resize: vertical;
+        }
+        .modal-body input:focus,
+        .modal-body textarea:focus,
+        .modal-body select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+        .modal-body textarea {
+            min-height: 140px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        .modal-footer {
+            padding: 16px 22px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            position: sticky;
+            bottom: 0;
+            background: var(--card-bg);
+            border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+        }
+
+        /* ========== QR码模态框专用样式 ========== */
+        .qr-modal-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            text-align: center;
+        }
+        .qr-display-wrapper {
+            background: #ffffff;
+            padding: 18px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+        }
+        .qr-display-wrapper canvas,
+        .qr-display-wrapper img {
+            display: block;
+            border-radius: 4px;
+        }
+        .qr-url-display {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            word-break: break-all;
+            background: var(--bg);
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            max-width: 100%;
+            text-align: center;
+            line-height: 1.5;
+            transition: all var(--transition);
+        }
+        .qr-local-warning {
+            background: #fffbeb;
+            border: 1.5px solid #fcd34d;
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-size: 0.82rem;
+            color: #92400e;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            line-height: 1.5;
+            text-align: left;
+        }
+        body.dev-mode .qr-local-warning {
+            background: #3d2e0a;
+            border-color: #b45309;
+            color: #fde68a;
+        }
+        .qr-actions-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        /* ========== Toast ========== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast-item {
+            background: #1f2937;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+            animation: toastIn 0.4s ease;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        body.dev-mode .toast-item {
+            background: #e2e8f0;
+            color: #1a1d28;
+        }
+        @keyframes toastIn {
+            from {
+                transform: translateX(120px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .toast-item.success {
+            border-left: 4px solid #27ae60;
+        }
+        .toast-item.error {
+            border-left: 4px solid #e74c3c;
+        }
+
+        /* ========== 云端状态指示器 ========== */
+        .cloud-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            padding: 5px 10px;
+            border-radius: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .cloud-status.online {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .cloud-status.offline {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .cloud-status.syncing {
+            background: #e3f2fd;
+            color: #1565c0;
+            animation: pulseCloud 1.5s ease-in-out infinite;
+        }
+        body.dev-mode .cloud-status.online {
+            background: #1b3a1b;
+            color: #81c784;
+        }
+        body.dev-mode .cloud-status.offline {
+            background: #3d2000;
+            color: #ffb74d;
+        }
+        body.dev-mode .cloud-status.syncing {
+            background: #0a1a3a;
+            color: #64b5f6;
+        }
+        @keyframes pulseCloud {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        .cloud-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .cloud-dot.green {
+            background: #27ae60;
+        }
+        .cloud-dot.orange {
+            background: #f39c12;
+        }
+        .cloud-dot.blue {
+            background: #2196f3;
+            animation: pulseDot 1.5s ease-in-out infinite;
+        }
+        @keyframes pulseDot {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.8);
+            }
+        }
+
+        /* ========== 文件上传区域 ========== */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: var(--bg);
+        }
+        .upload-zone:hover {
+            border-color: var(--accent);
+            background: var(--accent-light);
+        }
+        .upload-zone.drag-over {
+            border-color: var(--accent);
+            background: var(--accent-light);
+            box-shadow: 0 0 0 8px var(--accent-glow);
+        }
+        .upload-zone .icon {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .upload-zone p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+        .upload-zone input[type="file"] {
+            display: none;
+        }
+
+        /* ========== 开发者工具栏 ========== */
+        .dev-toolbar {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--card-bg);
+            border: 2px dashed var(--accent);
+            border-radius: var(--radius-lg);
+            flex-wrap: wrap;
+            transition: all var(--transition);
+        }
+        body.dev-mode .dev-toolbar {
+            display: flex;
+        }
+        .dev-toolbar .toolbar-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .dev-toolbar .btn-dev {
+            background: var(--accent-light);
+            border: 1.5px solid var(--accent);
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .dev-toolbar .btn-dev:hover {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 14px var(--accent-glow);
+        }
+        .dev-dropdown {
+            position: relative;
+            display: inline-flex;
+        }
+        .dev-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 6px;
+            background: var(--card-bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 150;
+            min-width: 160px;
+            overflow: hidden;
+            animation: fadeIn 0.2s ease;
+        }
+        .dev-dropdown-menu.show {
+            display: block;
+        }
+        .dev-dropdown-item {
+            padding: 10px 16px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition);
+            color: var(--text);
+            white-space: nowrap;
+            border-bottom: 1px solid var(--border);
+        }
+        .dev-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .dev-dropdown-item:hover {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+        .doc-number-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.73rem;
+            font-weight: 700;
+            background: #fef3c7;
+            color: #b45309;
+            white-space: nowrap;
+            letter-spacing: 0.03em;
+        }
+        body.dev-mode .doc-number-badge {
+            background: #4a3000;
+            color: #fbbf24;
+        }
+        .doc-card-image {
+            width: 100%;
+            max-height: 180px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            display: none;
+            object-fit: contain;
+        }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 10px;
+                height: 52px;
+                gap: 6px;
+            }
+            .navbar-brand {
+                font-size: 0.95rem;
+                gap: 4px;
+            }
+            .navbar-brand .icon {
+                font-size: 1.1rem;
+            }
+            .main-container {
+                padding: 12px 8px 24px;
+                gap: 14px;
+            }
+            .doc-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .doc-card {
+                padding: 14px 16px;
+                gap: 6px;
+            }
+            .search-box-inner {
+                padding: 4px 4px 4px 12px;
+                gap: 6px;
+            }
+            .search-input-main {
+                font-size: 0.9rem;
+                padding: 8px 0;
+            }
+            .search-submit-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+            .modal {
+                max-width: 95vw;
+                max-height: 90vh;
+                border-radius: var(--radius-lg);
+            }
+            .btn {
+                font-size: 0.74rem;
+                padding: 5px 10px;
+                border-radius: 16px;
+            }
+            .btn-sm {
+                font-size: 0.7rem;
+                padding: 4px 8px;
+            }
+            .category-chip {
+                padding: 5px 10px;
+                font-size: 0.72rem;
+            }
+            .badge {
+                font-size: 0.68rem;
+                padding: 3px 8px;
+            }
+            .btn-qr {
+                padding: 5px 10px;
+                font-size: 0.74rem;
+            }
+            .qr-display-wrapper {
+                padding: 10px;
+            }
+            .qr-display-wrapper canvas,
+            .qr-display-wrapper img {
+                width: 160px !important;
+                height: 160px !important;
+            }
+        }
+        @media (max-width: 400px) {
+            .navbar {
+                height: 44px;
+                padding: 0 6px;
+                gap: 3px;
+            }
+            .navbar-brand {
+                font-size: 0.8rem;
+                gap: 2px;
+            }
+            .navbar-brand .icon {
+                font-size: 0.9rem;
+            }
+            .btn {
+                font-size: 0.68rem;
+                padding: 4px 7px;
+                border-radius: 12px;
+                gap: 3px;
+            }
+            .badge {
+                font-size: 0.6rem;
+                padding: 2px 6px;
+            }
+            .search-box-inner {
+                padding: 2px 2px 2px 8px;
+            }
+            .search-input-main {
+                font-size: 0.8rem;
+                padding: 7px 0;
+            }
+            .search-submit-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 0.8rem;
+            }
+            .doc-card-title {
+                font-size: 0.85rem;
+            }
+            .qr-display-wrapper canvas,
+            .qr-display-wrapper img {
+                width: 130px !important;
+                height: 130px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== 顶部导航 ==================== -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-brand" title="返回首页" onclick="resetSearch()">
+            <span class="icon"></span> DocSearch
+        </div>
+        <div class="navbar-actions">
+            <button class="btn btn-sm btn-qr" id="qrNavBtn" title="扫码在手机上访问此页面">
+                扫码访问
+            </button>
+            <span class="badge badge-user" id="modeBadge">用户模式</span>
+            <button class="btn btn-sm" id="toggleModeBtn" title="切换开发者/管理模式">
+                开发者模式
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==================== 主容器 ==================== -->
+    <div class="main-container">
+        <!-- 开发者工具栏（仅开发者模式可见） -->
+        <div class="dev-toolbar" id="devToolbar">
+            <span class="toolbar-label">管理工具</span>
+            <div class="dev-dropdown" id="devDropdown">
+                <button class="btn btn-sm btn-dev" id="devMenuBtn">添加内容 ▾</button>
+                <div class="dev-dropdown-menu" id="devDropdownMenu">
+                    <div class="dev-dropdown-item" data-action="addDoc">新建文档</div>
+                    <div class="dev-dropdown-item" data-action="autoNumber">自动编号</div>
+                </div>
+            </div>
+            <input type="file" id="hiddenImageInput" accept="image/*" style="display:none;" multiple>
+        </div>
+        <!-- 搜索区域 -->
+        <div class="search-section">
+            <div class="search-box-wrapper" id="searchBoxWrapper">
+                <div class="search-box-inner">
+                    <span class="search-icon-large"></span>
+                    <input type="text" class="search-input-main" id="searchInput" placeholder="输入编号或关键词搜索文档..." autocomplete="off">
+                    <button class="search-submit-btn" id="searchSubmitBtn" title="搜索">→</button>
+                </div>
+            </div>
+            <!-- 分类筛选 -->
+            <div class="category-chips" id="categoryChips">
+                <span class="category-chip active" data-category="all">全部<span class="count" id="countAll">0</span></span>
+            </div>
+        </div>
+
+        <!-- 结果头部 -->
+        <div class="results-header">
+            <span class="results-count" id="resultsCount">共 <strong>0</strong> 篇文档</span>
+            <select class="sort-select" id="sortSelect">
+                <option value="newest">最新优先</option>
+                <option value="oldest">最早优先</option>
+                <option value="title">标题排序</option>
+            </select>
+        </div>
+
+        <!-- 文档网格 -->
+        <div class="doc-grid" id="docGrid"></div>
+
+        <!-- 空状态 -->
+        <div class="empty-state" id="emptyState" style="display:none;">
+            <span class="icon"></span>
+            <h3>没有找到相关文档</h3>
+            <p>请尝试其他关键词或切换分类</p>
+        </div>
+    </div>
+
+    <!-- ==================== 文档详情/编辑模态框 ==================== -->
+    <div class="modal-overlay" id="modalOverlay" style="display:none;">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">文档详情</h3>
+                <button class="modal-close" id="modalCloseBtn">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
+        </div>
+    </div>
+
+    <!-- ==================== 二维码模态框 ==================== -->
+    <div class="modal-overlay" id="qrModalOverlay" style="display:none;">
+        <div class="modal" id="qrModal" style="max-width:500px;">
+            <div class="modal-header">
+                <h3>扫码访问 DocSearch</h3>
+                <button class="modal-close" id="qrModalCloseBtn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="qr-modal-content">
+                    <div class="qr-display-wrapper" id="qrDisplayWrapper">
+                        <div id="qrCodeContainer" style="width:200px;height:200px;display:flex;align-items:center;justify-content:center;">
+                            <span style="color:var(--text-secondary);font-size:0.85rem;">正在生成二维码...</span>
+                        </div>
+                    </div>
+                    <div class="qr-url-display" id="qrUrlDisplay">--</div>
+                    <div class="qr-local-warning" id="qrLocalWarning" style="display:none;">
+                        当前为本地文件，二维码无法直接使用。<br>请将此页面部署到服务器后，二维码才会指向有效地址。
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:6px;width:100%;">
+                        <label style="font-size:0.78rem;color:var(--text-secondary);">自定义URL（部署后更新）</label>
+                        <input type="text" id="qrUrlInput" placeholder="输入部署后的URL以更新二维码" style="text-align:center;">
+                    </div>
+                    <div class="qr-actions-row">
+                        <button class="btn btn-accent btn-sm" id="downloadQrBtn">下载二维码</button>
+                        <button class="btn btn-sm" id="copyQrUrlBtn">复制链接</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== Toast容器 ==================== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        (function() {
+            // ==================== DOM引用 ====================
+            const $ = (sel) => document.querySelector(sel);
+            const $$ = (sel) => document.querySelectorAll(sel);
+
+            // ==================== 云端配置（腾讯云开发 CloudBase） ====================
+            const CLOUD_CONFIG = {
+                env: 'bandeng-d1gsxb3bp3c52afa9',
+                accessKey: 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjlkMWRjMzFlLWI0ZDAtNDQ4Yi1hNzZmLWIwY2M2M2Q4MTQ5OCJ9.eyJpc3MiOiJodHRwczovL2JhbmRlbmctZDFnc3hiM2JwM2M1MmFmYTkuYXAtc2hhbmdoYWkudGNiLWFwaS50ZW5jZW50Y2xvdWRhcGkuY29tIiwic3ViIjoiYW5vbiIsImF1ZCI6ImJhbmRlbmctZDFnc3hiM2JwM2M1MmFmYTkiLCJleHAiOjQwOTAyNzM4MzcsImlhdCI6MTc4NjU5MDYzNywibm9uY2UiOiI4U3JUeFlNR1RSU0ZuSkxLNXZPLThnIiwiYXRfaGFzaCI6IjhTclR4WU1HVFJTRm5KTEs1dk8tOGciLCJuYW1lIjoiQW5vbnltb3VzIiwic2NvcGUiOiJhbm9ueW1vdXMiLCJwcm9qZWN0X2lkIjoiYmFuZGVuZy1kMWdzeGIzYnAzYzUyYWZhOSIsIm1ldGEiOnsicGxhdGZvcm0iOiJQdWJsaXNoYWJsZUtleSJ9LCJ1c2VyX3R5cGUiOiIiLCJjbGllbnRfdHlwZSI6ImNsaWVudF91c2VyIiwiaXNfc3lzdGVtX2FkbWluIjpmYWxzZX0.NIZt-dRh9OwXyrTVxcA0Z84-NT63EfiJKpgC18aojDxJXfb__bFFLt1y1-p1ID_4n952iW20ofXr6AVGus6AWoQASsMk2kGwNs4V592PTM_xvFT1lf61TkuagFe--SWwzFLuPFw-rAg8cnVLU_oHrpS--ip55t9DrxLwn7GXIRek9yAgnAnlWSnoazD0NQ10Kgrqh9BjIetLBMEOCOtnb4663OwBBXfr20MnyTcuaOV7eCIZzoSRYhrxbUQf4iyiWWnb9H6ODNlLoDv_xd43qcjlbIC-nsqj9tRhugxJRLNNLteNKwTufPEsYpMxkj-TmTs8JvrkPtkk36q5Wn-HHQ'
+            };
+            const COLLECTION = 'documents';
+
+            // ==================== DOM 元素引用 ====================
+            const searchInput = $('#searchInput');
+            const searchSubmitBtn = $('#searchSubmitBtn');
+            const searchBoxWrapper = $('#searchBoxWrapper');
+            const categoryChips = $('#categoryChips');
+            const docGrid = $('#docGrid');
+            const emptyState = $('#emptyState');
+            const resultsCount = $('#resultsCount');
+            const sortSelect = $('#sortSelect');
+            const modalOverlay = $('#modalOverlay');
+            const modal = $('#modal');
+            const modalTitle = $('#modalTitle');
+            const modalBody = $('#modalBody');
+            const modalFooter = $('#modalFooter');
+            const modalCloseBtn = $('#modalCloseBtn');
+            const toggleModeBtn = $('#toggleModeBtn');
+            const modeBadge = $('#modeBadge');
+            const toastContainer = $('#toastContainer');
+            const navbar = $('#navbar');
+            const qrNavBtn = $('#qrNavBtn');
+            const qrModalOverlay = $('#qrModalOverlay');
+            const qrModalCloseBtn = $('#qrModalCloseBtn');
+            const qrCodeContainer = $('#qrCodeContainer');
+            const qrDisplayWrapper = $('#qrDisplayWrapper');
+            const qrUrlDisplay = $('#qrUrlDisplay');
+            const qrUrlInput = $('#qrUrlInput');
+            const qrLocalWarning = $('#qrLocalWarning');
+            const downloadQrBtn = $('#downloadQrBtn');
+            const copyQrUrlBtn = $('#copyQrUrlBtn');
+
+            // ==================== 状态 ====================
+            let isDevMode = false;
+            let currentCategory = 'all';
+            let currentSort = 'newest';
+            let searchQuery = '';
+            let editingDocId = null;
+            let qrCodeInstance = null;
+            let currentQrUrl = '';
+
+            // ==================== 数据层（腾讯云开发 CloudBase） ====================
+            let documents = [];
+            let db = null;
+            let watcher = null;
+
+            function cloudbaseInit() {
+                if (typeof cloudbase === 'undefined') {
+                    console.warn('CloudBase SDK 未加载');
+                    return false;
+                }
+                try {
+                    const app = cloudbase.init(CLOUD_CONFIG);
+                    db = app.database();
+                    return true;
+                } catch (e) {
+                    console.warn('CloudBase 初始化失败: ' + e.message);
+                    return false;
+                }
+            }
+
+            function cloudbaseFetchDocuments() {
+                if (!db) {
+                    showToast('云端未连接，请检查配置', 'error');
+                    return Promise.resolve();
+                }
+                return new Promise((resolve) => {
+                    watcher = db.collection(COLLECTION).watch({
+                        onChange(snapshot) {
+                            documents = (snapshot.docs || []).map(doc => {
+                                const { _id, ...rest } = doc;
+                                return { id: _id, ...rest };
+                            });
+                            renderDocuments();
+                            renderCategories();
+                            resolve();
+                        },
+                        onError(error) {
+                            console.warn('云端监听错误', error);
+                            showToast('数据加载失败，请稍后刷新', 'error');
+                            resolve();
+                        }
+                    });
+                });
+            }
+
+            async function cloudbaseSaveDocument(doc) {
+                if (!db) { showToast('云端未连接', 'error'); return; }
+                try {
+                    const { id, _id, ...data } = doc;
+                    await db.collection(COLLECTION).doc(id).set(data);
+                } catch (e) {
+                    console.warn('保存文档失败', e);
+                    showToast('保存失败: ' + e.message, 'error');
+                }
+            }
+
+            async function cloudbaseDeleteDocument(docId) {
+                if (!db) { showToast('云端未连接', 'error'); return; }
+                try {
+                    await db.collection(COLLECTION).doc(docId).remove();
+                } catch (e) {
+                    console.warn('删除文档失败', e);
+                    showToast('删除失败: ' + e.message, 'error');
+                }
+            }
+
+            function getAllCategories() {
+                const cats = new Set();
+                documents.forEach(d => { if (d.category) cats.add(d.category); });
+                return ['all', ...Array.from(cats).sort()];
+            }
+
+            function renderCategories() {
+                const categories = getAllCategories();
+                const counts = {};
+                documents.forEach(d => { counts[d.category] = (counts[d.category] || 0) + 1; });
+                counts['all'] = documents.length;
+                categoryChips.innerHTML = categories.map(cat => {
+                    const label = cat === 'all' ? '全部' : cat;
+                    const countHtml = cat === 'all' ? `<span class="count" id="countAll">${counts['all']}</span>` :
+                        `<span class="count">${counts[cat] || 0}</span>`;
+                    const activeClass = currentCategory === cat ? ' active' : '';
+                    return `<span class="category-chip${activeClass}" data-category="${cat}">${label} ${countHtml}</span>`;
+                }).join('');
+                categoryChips.querySelectorAll('.category-chip').forEach(chip => {
+                    chip.addEventListener('click', () => { currentCategory = chip.dataset.category;
+                        renderCategories();
+                        renderDocuments(); });
+                });
+            }
+
+            function getFilteredDocuments() {
+                let filtered = [...documents];
+                if (currentCategory !== 'all') filtered = filtered.filter(d => d.category === currentCategory);
+                if (searchQuery.trim()) {
+                    const q = searchQuery.trim().toLowerCase();
+                    filtered = filtered.filter(d => {
+                        const matchNumber = d.docNumber && d.docNumber.toLowerCase().includes(q);
+                        return matchNumber || d.title.toLowerCase().includes(q) || d.content.toLowerCase().includes(q) || (
+                            d.tags && d.tags.some(t => t.toLowerCase().includes(q))) || (d.author && d.author
+                            .toLowerCase().includes(q));
+                    });
+                }
+                if (currentSort === 'newest') filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                else if (currentSort === 'oldest') filtered.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+                else if (currentSort === 'title') filtered.sort((a, b) => a.title.localeCompare(b.title, 'zh-CN'));
+                return filtered;
+            }
+
+            function highlightText(text, query) {
+                if (!query.trim()) return escapeHtml(text);
+                const escaped = escapeHtml(text);
+                const q = escapeHtml(query.trim());
+                const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                return escaped.replace(regex, '<span class="highlight">$1</span>');
+            }
+
+            function escapeHtml(str) { const div = document.createElement('div');
+                div.textContent = str; return div.innerHTML; }
+
+            function getExcerpt(content, query, maxLen = 120) {
+                const text = content.replace(/\s+/g, ' ').trim();
+                if (text.length <= maxLen) return text;
+                if (query.trim()) {
+                    const idx = text.toLowerCase().indexOf(query.trim().toLowerCase());
+                    if (idx >= 0) { const start = Math.max(0, idx - 30);
+                        const end = Math.min(text.length, idx + query.length + 60);
+                        let excerpt = text.substring(start, end); if (start > 0) excerpt = '...' + excerpt; if (end < text
+                            .length) excerpt = excerpt + '...'; return excerpt; }
+                }
+                return text.substring(0, maxLen) + '...';
+            }
+
+            function renderDocuments() {
+                const filtered = getFilteredDocuments();
+                resultsCount.innerHTML = `共 <strong>${filtered.length}</strong> 篇文档`;
+                if (filtered.length === 0) { docGrid.innerHTML = '';
+                    emptyState.style.display = 'block'; } else { emptyState.style.display = 'none';
+                    docGrid.innerHTML = filtered.map(doc => {
+                        const excerpt = getExcerpt(doc.content, searchQuery);
+                        const highlightedTitle = highlightText(doc.title, searchQuery);
+                        const highlightedExcerpt = highlightText(excerpt, searchQuery);
+                        const updatedDate = new Date(doc.updatedAt).toLocaleDateString('zh-CN', { year: 'numeric',
+                            month: 'short', day: 'numeric' });
+                        const tagsHtml = (doc.tags || []).map(t => `<span class="doc-tag">${escapeHtml(t)}</span>`)
+                            .join('');
+                        const numberHtml = doc.docNumber ? `<span class="doc-number-badge"># ${escapeHtml(doc.docNumber)}</span>` : '';
+                        const imageHtml = doc.docImage ? `<img class="doc-card-image" src="${doc.docImage}" alt="image" loading="lazy">` : '';
+                        return `
+                        <div class="doc-card" data-id="${doc.id}" onclick="window._viewDocument('${doc.id}')">
+                            <div class="doc-card-header"><span class="doc-card-title">${highlightedTitle}</span><span class="doc-card-category">${escapeHtml(doc.category || '未分类')}</span></div>
+                            ${numberHtml}
+                            ${imageHtml}
+                            <div class="doc-card-excerpt">${highlightedExcerpt}</div>
+                            <div class="doc-card-tags">${tagsHtml}</div>
+                            <div class="doc-card-meta"><span>${escapeHtml(doc.author || '未知')}</span><span>${updatedDate}</span></div>
+                            ${isDevMode ? `<div class="doc-card-actions" onclick="event.stopPropagation();"><button class="btn btn-sm btn-xs" onclick="window._editDocument('${doc.id}')">编辑</button><button class="btn btn-sm btn-xs btn-danger" onclick="window._deleteDocument('${doc.id}')">删除</button></div>` : ''}
+                        </div>`;
+                    }).join(''); }
+                renderCategories();
+            }
+
+            function openModal(title, bodyHtml, footerHtml) {
+                modalTitle.innerHTML = title;
+                modalBody.innerHTML = bodyHtml;
+                modalFooter.innerHTML = footerHtml;
+                modalOverlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal() { modalOverlay.style.display = 'none';
+                document.body.style.overflow = '';
+                editingDocId = null; }
+            modalCloseBtn.addEventListener('click', closeModal);
+            modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalOverlay.style.display === 'flex')
+                    closeModal(); });
+
+            function viewDocument(docId) {
+                const doc = documents.find(d => d.id === docId);
+                if (!doc) return;
+                const updatedDate = new Date(doc.updatedAt).toLocaleString('zh-CN');
+                const createdDate = new Date(doc.createdAt).toLocaleString('zh-CN');
+                const tagsHtml = (doc.tags || []).map(t => `<span class="doc-tag">${escapeHtml(t)}</span>`).join(' ');
+                const numberHtml = doc.docNumber ? `<span class="doc-number-badge"># ${escapeHtml(doc.docNumber)}</span>` : '';
+                const imageHtml = doc.docImage ? `<img src="${doc.docImage}" style="max-width:100%;max-height:300px;border-radius:var(--radius-sm);border:1px solid var(--border);object-fit:contain;">` : '';
+                const bodyHtml = `
+                    <div style="display:flex;flex-direction:column;gap:12px;">
+                        ${numberHtml ? `<div>${numberHtml}</div>` : ''}
+                        <div><label>分类</label><p>${escapeHtml(doc.category || '未分类')}</p></div>
+                        <div><label>作者</label><p>${escapeHtml(doc.author || '未知')}</p></div>
+                        <div><label>创建时间</label><p>${createdDate}</p></div>
+                        <div><label>更新时间</label><p>${updatedDate}</p></div>
+                        <div><label>标签</label><div style="display:flex;flex-wrap:wrap;gap:5px;">${tagsHtml || '无'}</div></div>
+                        ${imageHtml ? `<div><label>图片</label>${imageHtml}</div>` : ''}
+                        <div style="border-top:1px solid var(--border);padding-top:10px;"><label>内容</label><div style="background:var(--bg);padding:14px;border-radius:var(--radius-sm);white-space:pre-wrap;line-height:1.7;font-size:0.9rem;max-height:300px;overflow-y:auto;">${escapeHtml(doc.content)}</div></div>
+                    </div>`;
+                const footerHtml =
+                    `${isDevMode ? `<button class="btn btn-accent btn-sm" onclick="window._editDocument('${doc.id}')">编辑文档</button>` : ''}<button class="btn btn-sm" onclick="document.getElementById('modalOverlay').style.display='none';document.body.style.overflow='';">关闭</button>`;
+                openModal(escapeHtml(doc.title), bodyHtml, footerHtml);
+            }
+
+            function editDocument(docId) {
+                editingDocId = docId;
+                const doc = documents.find(d => d.id === docId);
+                if (!doc) { editingDocId = null; return; }
+                const bodyHtml = `
+                    <div><label>编号</label><input type="text" id="editNumber" value="${escapeHtml(doc.docNumber || '')}" placeholder="如：DOC-001"></div>
+                    <div><label>文档标题</label><input type="text" id="editTitle" value="${escapeHtml(doc.title)}" placeholder="输入文档标题"></div>
+                    <div><label>分类</label><input type="text" id="editCategory" value="${escapeHtml(doc.category || '')}" placeholder="如：技术文档、人力资源"></div>
+                    <div><label>作者</label><input type="text" id="editAuthor" value="${escapeHtml(doc.author || '')}" placeholder="作者名称"></div>
+                    <div><label>标签（逗号分隔）</label><input type="text" id="editTags" value="${(doc.tags || []).join(', ')}" placeholder="标签1, 标签2"></div>
+                    <div><label>内容</label><textarea id="editContent" placeholder="文档正文内容...">${escapeHtml(doc.content)}</textarea></div>`;
+                const footerHtml =
+                    '<button class="btn btn-accent" id="saveEditBtn">保存修改</button><button class="btn btn-sm" onclick="document.getElementById(\'modalOverlay\').style.display=\'none\';document.body.style.overflow=\'\';">取消</button>';
+                openModal('编辑文档', bodyHtml, footerHtml);
+                setTimeout(() => {
+                    const saveBtn = $('#saveEditBtn');
+                    if (saveBtn) saveBtn.addEventListener('click', () => {
+                        const docNumber = $('#editNumber')?.value?.trim() || '';
+                        const title = $('#editTitle')?.value?.trim();
+                        const category = $('#editCategory')?.value?.trim();
+                        const author = $('#editAuthor')?.value?.trim();
+                        const tagsRaw = $('#editTags')?.value?.trim();
+                        const content = $('#editContent')?.value?.trim();
+                        if (!title) { showToast('请输入文档标题', 'error'); return; }
+                        if (!content) { showToast('请输入文档内容', 'error'); return; }
+                        const tags = tagsRaw ? tagsRaw.split(/[,，\s]+/).filter(Boolean) : [];
+                        const idx = documents.findIndex(d => d.id === editingDocId);
+                        if (idx >= 0) { documents[idx].docNumber = docNumber;
+                            documents[idx].title = title;
+                            documents[idx].category = category || '未分类';
+                            documents[idx].author = author || '未知';
+                            documents[idx].tags = tags;
+                            documents[idx].content = content;
+                            documents[idx].updatedAt = new Date().toISOString();
+                            cloudbaseSaveDocument(documents[idx]);
+                            closeModal();
+                            renderDocuments();
+                            showToast('文档已更新', 'success'); }
+                        editingDocId = null;
+                    });
+                }, 100);
+            }
+
+            function deleteDocument(docId) {
+                const doc = documents.find(d => d.id === docId);
+                if (!doc) return;
+                if (confirm(`确定要删除文档《${doc.title}》吗？此操作不可恢复。`)) { cloudbaseDeleteDocument(
+                        docId);
+                    documents = documents.filter(d => d.id !== docId);
+                    renderDocuments();
+                    showToast('文档已删除', 'success'); }
+            }
+
+            function createDocument() {
+                editingDocId = null;
+                const nextNum = documents.length + 1;
+                const bodyHtml = `
+                    <div><label>编号（可选，用于快速搜索）</label><input type="text" id="editNumber" placeholder="如：DOC-001" value="DOC-${String(nextNum).padStart(3, '0')}"></div>
+                    <div><label>上传本地文件（可选）</label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="file" id="editFileInput" accept=".txt,.md,.json,.html,.css,.js,.xml,.csv,.log,.doc,.docx,.pdf" style="display:none;">
+                            <button class="btn btn-sm btn-dev" id="pickFileBtn" type="button">选择文件</button>
+                            <span id="filePickName" style="font-size:0.78rem;color:var(--text-secondary);"></span>
+                        </div>
+                    </div>
+                    <div><label>上传图片（可选）</label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="file" id="editImageInput" accept="image/*" style="display:none;">
+                            <button class="btn btn-sm btn-dev" id="pickImageBtn" type="button">选择图片</button>
+                            <span id="imageFileName" style="font-size:0.78rem;color:var(--text-secondary);"></span>
+                        </div>
+                        <img class="image-preview" id="imagePreview" src="" alt="预览" style="margin-top:8px;">
+                    </div>
+                    <div><label>文档标题 *</label><input type="text" id="editTitle" placeholder="输入文档标题"></div>
+                    <div><label>分类</label><input type="text" id="editCategory" placeholder="如：技术文档、人力资源"></div>
+                    <div><label>作者</label><input type="text" id="editAuthor" placeholder="作者名称"></div>
+                    <div><label>标签（逗号分隔）</label><input type="text" id="editTags" placeholder="标签1, 标签2"></div>
+                    <div><label>内容 *</label><textarea id="editContent" placeholder="文档正文内容..."></textarea></div>`;
+                const footerHtml =
+                    '<button class="btn btn-accent" id="saveNewBtn">创建文档</button><button class="btn btn-sm" onclick="document.getElementById(\'modalOverlay\').style.display=\'none\';document.body.style.overflow=\'\';">取消</button>';
+                openModal('新建文档', bodyHtml, footerHtml);
+                setTimeout(() => {
+                    const fileInput = $('#editFileInput');
+                    const pickFileBtn = $('#pickFileBtn');
+                    const filePickName = $('#filePickName');
+                    const titleInput = $('#editTitle');
+                    const contentInput = $('#editContent');
+                    const categoryInput = $('#editCategory');
+
+                    if (pickFileBtn && fileInput) {
+                        pickFileBtn.addEventListener('click', () => { fileInput.click(); });
+                        fileInput.addEventListener('change', () => {
+                            const file = fileInput.files[0];
+                            if (!file) return;
+                            filePickName.textContent = file.name;
+                            const ext = file.name.split('.').pop().toLowerCase();
+                            const catMap = { 'md': '技术文档', 'txt': '通用文档', 'json': '技术文档', 'html': '技术文档', 'css': '技术文档', 'js': '技术文档', 'xml': '技术文档', 'csv': '数据文档', 'log': '日志文档', 'doc': 'Word文档', 'docx': 'Word文档', 'pdf': 'PDF文档' };
+                            if (!titleInput.value) titleInput.value = file.name.replace(/\.[^.]+$/, '');
+                            if (!categoryInput.value) categoryInput.value = catMap[ext] || '上传文档';
+
+                            if (ext === 'pdf' || ext === 'doc' || ext === 'docx') {
+                                showToast('PDF/DOC 为二进制文件，请手动输入内容', 'error');
+                            } else {
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                    let text = e.target.result;
+                                    if (text.length > 50000) text = text.substring(0, 50000) + '\n\n...[内容过长已截断]';
+                                    contentInput.value = text;
+                                    if (!titleInput.value) titleInput.value = file.name.replace(/\.[^.]+$/, '');
+                                };
+                                reader.readAsText(file, 'UTF-8');
+                            }
+                        });
+                    }
+
+                    // 图片上传
+                    let imageData = '';
+                    const imgInput = $('#editImageInput');
+                    const pickImgBtn = $('#pickImageBtn');
+                    const imgPreview = $('#imagePreview');
+                    const imgFileName = $('#imageFileName');
+                    if (pickImgBtn && imgInput) {
+                        pickImgBtn.addEventListener('click', () => { imgInput.click(); });
+                        imgInput.addEventListener('change', () => {
+                            const file = imgInput.files[0];
+                            if (!file) return;
+                            imgFileName.textContent = file.name;
+                            const reader = new FileReader();
+                            reader.onload = (e) => { imageData = e.target.result; if (imgPreview) { imgPreview.src = imageData; imgPreview.style.display = 'block'; } };
+                            reader.readAsDataURL(file);
+                        });
+                    }
+
+                    const saveBtn = $('#saveNewBtn');
+                    if (saveBtn) saveBtn.addEventListener('click', () => {
+                        const docNumber = $('#editNumber')?.value?.trim() || '';
+                        const title = titleInput?.value?.trim();
+                        const category = categoryInput?.value?.trim();
+                        const author = $('#editAuthor')?.value?.trim();
+                        const tagsRaw = $('#editTags')?.value?.trim();
+                        const content = contentInput?.value?.trim();
+                        if (!title) { showToast('请输入文档标题', 'error'); return; }
+                        if (!content) { showToast('请输入文档内容', 'error'); return; }
+                        const tags = tagsRaw ? tagsRaw.split(/[,，\s]+/).filter(Boolean) : [];
+                        const newDoc = { id: 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                            docNumber, title, category: category || '未分类', author: author || '未知', tags, content,
+                            docImage: imageData, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+                        documents.unshift(newDoc);
+                        cloudbaseSaveDocument(newDoc);
+                        closeModal();
+                        renderDocuments();
+                        showToast('文档已创建', 'success');
+                    });
+                }, 100);
+            }
+
+            function handleFileUpload(file) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    let content = e.target.result;
+                    if (content.length > 50000) content = content.substring(0, 50000) + '\n\n...[内容过长已截断]';
+                    const title = file.name.replace(/\.[^.]+$/, '');
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    const categoryMap = { 'md': '技术文档', 'txt': '通用文档', 'json': '技术文档', 'html': '技术文档',
+                        'css': '技术文档', 'js': '技术文档', 'pdf': 'PDF文档', 'doc': 'Word文档', 'docx': 'Word文档' };
+                    const newDoc = { id: 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), title,
+                        category: categoryMap[ext] || '上传文档', author: '文件上传', tags: [ext, '上传'], content,
+                        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), fileType: ext,
+                        originalFileName: file.name };
+                    documents.unshift(newDoc);
+                    cloudbaseSaveDocument(newDoc);
+                    renderDocuments();
+                    showToast(`文件 "${file.name}" 已上传并创建文档`, 'success');
+                };
+                reader.readAsText(file, 'UTF-8');
+            }
+
+            const DEV_PASSWORD = '0000';
+
+            function showPasswordModal(callback) {
+                const html = `
+                    <div style="display:flex;flex-direction:column;gap:14px;align-items:center;">
+                        <span style="font-size:2rem;font-weight:700;">密码验证</span>
+                        <p style="font-size:0.9rem;color:var(--text-secondary);text-align:center;">请输入开发者密码以解锁</p>
+                        <input type="password" id="pwdInput" placeholder="输入密码" style="text-align:center;font-size:1.2rem;letter-spacing:4px;width:100%;max-width:260px;" autofocus>
+                        <p id="pwdError" style="color:#e74c3c;font-size:0.8rem;display:none;">密码错误，请重试</p>
+                    </div>`;
+                const footer = `
+                    <button class="btn" onclick="document.getElementById('modalOverlay').style.display='none';document.body.style.overflow='';">取消</button>
+                    <button class="btn btn-accent" id="pwdConfirmBtn">确认</button>`;
+                openModal('开发者验证', html, footer);
+                setTimeout(() => {
+                    const input = $('#pwdInput');
+                    if (input) input.focus();
+                    const checkPwd = () => {
+                        const val = $('#pwdInput')?.value || '';
+                        if (val === DEV_PASSWORD) {
+                            closeModal();
+                            callback(true);
+                        } else {
+                            const err = $('#pwdError');
+                            if (err) err.style.display = 'block';
+                            const inp = $('#pwdInput');
+                            if (inp) { inp.value = ''; inp.focus(); }
+                        }
+                    };
+                    const confirmBtn = $('#pwdConfirmBtn');
+                    if (confirmBtn) confirmBtn.addEventListener('click', checkPwd);
+                    const pwdInputEl = $('#pwdInput');
+                    if (pwdInputEl) pwdInputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkPwd(); });
+                }, 150);
+            }
+
+            function toggleDevMode() {
+                if (!isDevMode) {
+                    showPasswordModal((success) => {
+                        if (!success) return;
+                        _doToggle();
+                    });
+                    return;
+                }
+                _doToggle();
+            }
+
+            function _doToggle() {
+                isDevMode = !isDevMode;
+                if (isDevMode) {
+                    document.body.classList.add('dev-mode');
+                    modeBadge.textContent = '开发者模式';
+                    modeBadge.className = 'badge badge-admin';
+                    toggleModeBtn.textContent = '用户模式';
+                    navbar.style.borderBottom = '2px solid var(--accent)';
+                    showToast('已进入开发者模式', 'success');
+                } else {
+                    document.body.classList.remove('dev-mode');
+                    modeBadge.textContent = '用户模式';
+                    modeBadge.className = 'badge badge-user';
+                    toggleModeBtn.textContent = '开发者模式';
+                    navbar.style.borderBottom = '1px solid var(--border)';
+                    showToast('已退出开发者模式', 'success');
+                }
+                renderDocuments();
+            }
+
+            function showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = 'toast-item ' + type;
+                toast.textContent = message;
+                toastContainer.appendChild(toast);
+                setTimeout(() => { toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(120px)';
+                    toast.style.transition = 'all 0.35s ease';
+                    setTimeout(() => toast.remove(), 350); }, 2500);
+            }
+
+            // ==================== 二维码功能 ====================
+            function getPageUrl() {
+                const href = window.location.href;
+                const cleanUrl = href.split('?')[0].split('#')[0];
+                if (cleanUrl.startsWith('file://')) return null;
+                return cleanUrl;
+            }
+
+            function generateQRCode(url) {
+                currentQrUrl = url;
+                qrCodeContainer.innerHTML = '';
+                qrCodeInstance = null;
+                const isDark = document.body.classList.contains('dev-mode');
+                const fgColor = isDark ? '#6d8df7' : '#4a6cf7';
+                if (typeof QRCode !== 'undefined') {
+                    try {
+                        qrCodeInstance = new QRCode(qrCodeContainer, { text: url, width: 200, height: 200,
+                            colorDark: fgColor, colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+                        qrUrlDisplay.textContent = url;
+                        qrLocalWarning.style.display = 'none';
+                        qrUrlInput.value = url;
+                    } catch (e) { fallbackQRCode(url); }
+                } else { fallbackQRCode(url); }
+            }
+
+            function fallbackQRCode(url) {
+                qrCodeContainer.innerHTML = '';
+                const img = document.createElement('img');
+                img.src =
+                    `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}&margin=8&bgcolor=ffffff&color=4a6cf7`;
+                img.width = 200;
+                img.height = 200;
+                img.alt = 'QR Code';
+                img.style.display = 'block';
+                img.style.borderRadius = '4px';
+                img.onerror = () => { qrCodeContainer.innerHTML =
+                        '<span style="color:var(--text-secondary);font-size:0.8rem;">QR码生成失败</span>'; };
+                qrCodeContainer.appendChild(img);
+                qrUrlDisplay.textContent = url;
+                qrLocalWarning.style.display = 'none';
+                qrUrlInput.value = url;
+            }
+
+            function openQrModal() {
+                const pageUrl = getPageUrl();
+                if (pageUrl) {
+                    generateQRCode(pageUrl);
+                    qrLocalWarning.style.display = 'none';
+                    qrUrlInput.value = pageUrl;
+                } else {
+                    qrCodeContainer.innerHTML =
+                        '<span style="color:var(--text-secondary);font-size:0.8rem;text-align:center;">本地文件<br>请部署后生成QR码</span>';
+                    qrUrlDisplay.textContent = '（本地文件 - 请部署到服务器）';
+                    qrLocalWarning.style.display = 'flex';
+                    qrUrlInput.value = '';
+                    qrUrlInput.placeholder = '请粘贴部署后的URL...';
+                    currentQrUrl = '';
+                }
+                qrModalOverlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeQrModal() {
+                qrModalOverlay.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+
+            qrNavBtn.addEventListener('click', openQrModal);
+            qrModalCloseBtn.addEventListener('click', closeQrModal);
+            qrModalOverlay.addEventListener('click', (e) => { if (e.target === qrModalOverlay) closeQrModal(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && qrModalOverlay.style.display ===
+                    'flex') closeQrModal(); });
+
+            qrUrlInput.addEventListener('input', () => {
+                const url = qrUrlInput.value.trim();
+                if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+                    generateQRCode(url);
+                    qrLocalWarning.style.display = 'none';
+                }
+            });
+            qrUrlInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const url = qrUrlInput.value.trim();
+                    if (url && (url.startsWith('http://') || url.startsWith('https://'))) { generateQRCode(url);
+                        qrLocalWarning.style.display = 'none';
+                        showToast('二维码已更新！', 'success'); } else { showToast('请输入有效的URL', 'error'); }
+                }
+            });
+
+            downloadQrBtn.addEventListener('click', () => {
+                if (!currentQrUrl) { showToast('请先生成有效的二维码', 'error'); return; }
+                const canvas = qrCodeContainer.querySelector('canvas');
+                const img = qrCodeContainer.querySelector('img');
+                if (canvas) {
+                    const link = document.createElement('a');
+                    link.download = 'docsearch-qrcode.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    showToast('二维码已下载！', 'success');
+                } else if (img && img.src) {
+                    fetch(img.src).then(res => res.blob()).then(blob => {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.download = 'docsearch-qrcode.png';
+                        link.href = url;
+                        link.click();
+                        URL.revokeObjectURL(url);
+                        showToast('二维码已下载！', 'success');
+                    }).catch(() => { window.open(img.src, '_blank');
+                        showToast('请右键保存二维码图片', 'success'); });
+                } else { showToast('暂无二维码可下载', 'error'); }
+            });
+
+            copyQrUrlBtn.addEventListener('click', () => {
+                const urlToCopy = currentQrUrl || qrUrlInput.value.trim();
+                if (!urlToCopy || (!urlToCopy.startsWith('http://') && !urlToCopy.startsWith('https://'))) {
+                    showToast('没有可复制的有效链接', 'error');
+                    return;
+                }
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(urlToCopy).then(() => { showToast('链接已复制！',
+                    'success'); }).catch(() => { fallbackCopy(urlToCopy); });
+                } else { fallbackCopy(urlToCopy); }
+            });
+
+            function fallbackCopy(text) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try { document.execCommand('copy');
+                    showToast('链接已复制！', 'success'); } catch (e) { showToast('复制失败，请手动复制',
+                'error'); }
+                document.body.removeChild(textarea);
+            }
+
+            // ==================== 事件绑定 ====================
+            searchSubmitBtn.addEventListener('click', () => { searchQuery = searchInput.value;
+                renderDocuments(); });
+            searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { searchQuery = searchInput.value;
+                    renderDocuments(); } });
+            let searchDebounce;
+            searchInput.addEventListener('input', () => { clearTimeout(searchDebounce);
+                searchDebounce = setTimeout(() => { searchQuery = searchInput.value;
+                    renderDocuments(); }, 350); });
+            sortSelect.addEventListener('change', () => { currentSort = sortSelect.value;
+                renderDocuments(); });
+            toggleModeBtn.addEventListener('click', toggleDevMode);
+
+            // 开发者工具栏事件（统一下拉菜单）
+            const devMenuBtn = $('#devMenuBtn');
+            const devDropdownMenu = $('#devDropdownMenu');
+            const hiddenImageInput = $('#hiddenImageInput');
+
+            if (devMenuBtn && devDropdownMenu) {
+                devMenuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    devDropdownMenu.classList.toggle('show');
+                });
+                // 点击菜单项执行对应操作
+                devDropdownMenu.querySelectorAll('.dev-dropdown-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const action = item.dataset.action;
+                        if (action === 'addDoc') createDocument();
+                        else if (action === 'upload') { if (hiddenImageInput) hiddenImageInput.click(); }
+                        else if (action === 'autoNumber') autoNumberDocuments();
+                        devDropdownMenu.classList.remove('show');
+                    });
+                });
+                // 点击其他地方关闭菜单
+                document.addEventListener('click', () => {
+                    devDropdownMenu.classList.remove('show');
+                });
+            }
+
+            // 上传图片：创建含图片的文档
+            function handleImageUpload(file) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgData = e.target.result;
+                    const title = file.name.replace(/\.[^.]+$/, '');
+                    const nextNum = documents.length + 1;
+                    const newDoc = {
+                        id: 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                        docNumber: 'DOC-' + String(nextNum).padStart(3, '0'),
+                        title: title,
+                        category: '图片文档',
+                        author: '图片上传',
+                        tags: ['图片'],
+                        content: '图片文档：' + title,
+                        docImage: imgData,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    };
+                    documents.unshift(newDoc);
+                    cloudbaseSaveDocument(newDoc);
+                    renderDocuments();
+                    showToast('图片 "' + file.name + '" 已上传', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // 隐藏图片输入框监听
+            if (hiddenImageInput) {
+                hiddenImageInput.addEventListener('change', () => {
+                    const files = hiddenImageInput.files;
+                    if (files && files.length > 0) {
+                        for (const file of files) {
+                            if (file.type.startsWith('image/')) {
+                                handleImageUpload(file);
+                            } else {
+                                showToast('仅支持图片文件: ' + file.name, 'error');
+                            }
+                        }
+                        hiddenImageInput.value = '';
+                    }
+                });
+            }
+
+            // 自动编号：为非编号文档添加编号
+            function autoNumberDocuments() {
+                let count = 0;
+                documents.forEach((doc, i) => {
+                    if (!doc.docNumber) {
+                        doc.docNumber = 'DOC-' + String(i + 1).padStart(3, '0');
+                        count++;
+                    }
+                });
+                if (count > 0) {
+                    documents.forEach(doc => { if (doc.docNumber) cloudbaseSaveDocument(doc); });
+                    renderDocuments();
+                    showToast('已为 ' + count + ' 篇文档自动编号', 'success');
+                } else {
+                    showToast('所有文档已有编号', 'success');
+                }
+            }
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault();
+                    searchInput.focus();
+                    searchInput.select(); }
+                if ((e.ctrlKey || e.metaKey) && e.key === 'n' && isDevMode) { e.preventDefault();
+                    createDocument(); }
+                if ((e.ctrlKey || e.metaKey) && e.key === 'd' && isDevMode) { e.preventDefault();
+                    toggleDevMode(); }
+            });
+
+            window._viewDocument = viewDocument;
+            window._editDocument = editDocument;
+            window._deleteDocument = deleteDocument;
+            window._createDocument = createDocument;
+            window._toggleDevMode = toggleDevMode;
+            window._handleFileUpload = handleFileUpload;
+            window.resetSearch = function() { searchQuery = '';
+                searchInput.value = '';
+                currentCategory = 'all';
+                renderDocuments(); };
+
+            document.addEventListener('dragover', (e) => { e.preventDefault(); if (isDevMode && e.target.closest(
+                    '.main-container')) { searchBoxWrapper.style.borderColor = 'var(--accent)';
+                    searchBoxWrapper.style.boxShadow = '0 0 0 8px var(--accent-glow)'; } });
+            document.addEventListener('dragleave', (e) => { if (!e.target.closest('.main-container')) { searchBoxWrapper
+                    .style.borderColor = 'transparent';
+                    searchBoxWrapper.style.boxShadow = ''; } });
+            document.addEventListener('drop', (e) => { e.preventDefault();
+                searchBoxWrapper.style.borderColor = 'transparent';
+                searchBoxWrapper.style.boxShadow = ''; if (!isDevMode) { showToast(
+                        '请先切换到开发者模式再上传文件', 'error'); return; } const files = e.dataTransfer.files; if (files
+                    .length > 0) { for (const file of files) { if (file.type.match(
+                            /text|json|markdown|pdf|word|document/ig) || file.name.match(
+                            /\.(txt|md|json|html|css|js|xml|csv|log)$/i)) { handleFileUpload(
+                        file); } else { showToast(`文件类型不支持: ${file.name}`, 'error'); } } } });
+            document.addEventListener('paste', (e) => { if (!isDevMode) return; if (document.activeElement ===
+                    searchInput || document.activeElement?.closest('#modalOverlay') || document.activeElement
+                    ?.closest('#qrModalOverlay')) return; const items = e.clipboardData?.items; if (items) { for (
+                        const item of items) { if (item.kind === 'file') { const file = item.getAsFile();
+                        handleFileUpload(file); } } } });
+
+            function init() {
+                if (!cloudbaseInit()) {
+                    showToast('云端未配置，请检查 CLOUD_CONFIG 后重新部署', 'error');
+                    renderCategories();
+                    renderDocuments();
+                    return;
+                }
+                cloudbaseFetchDocuments();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
