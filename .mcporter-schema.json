@@ -2,7 +2,7 @@
   "mode": "server",
   "name": "cloudbase",
   "status": "ok",
-  "durationMs": 1314,
+  "durationMs": 1466,
   "transport": "STDIO node /app/node_modules/@cloudbase/cloudbase-mcp/dist/cli.cjs",
   "source": {
     "kind": "local",
